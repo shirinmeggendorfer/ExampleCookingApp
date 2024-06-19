@@ -4,6 +4,9 @@ import 'package:frontend/features/FoodIcon.dart';
 import 'package:frontend/features/ombreBackground.dart';
 import 'package:frontend/api_service.dart';
 import 'package:frontend/view/recipe.dart';
+import 'package:frontend/view/register.dart';
+import 'package:frontend/view/profile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -16,26 +19,111 @@ class _DashboardState extends State<Dashboard> {
   final TextEditingController _searchController = TextEditingController();
   final ApiService apiService = ApiService();
   List<dynamic> items = [];
+  List<dynamic> filteredItems = [];
+  String? username;
+
+  bool meatFilter = false;
+  bool dairyFilter = false;
+  bool glutenFilter = false;
+  bool lowsugarFilter = false;
+  int? timeFilter;
 
   @override
   void initState() {
     super.initState();
     _fetchItems();
+    _loadUsername();
+    _searchController.addListener(_onSearchChanged);
   }
 
   Future<void> _fetchItems() async {
     try {
       final fetchedItems = await apiService.fetchItems();
       setState(() {
-        items = fetchedItems.take(20).toList(); // Nimm die letzten 20 Items
+        items = fetchedItems.take(20).toList();
+        filteredItems = items;
       });
     } catch (e) {
       print('Failed to load items: $e');
     }
   }
 
+  Future<void> _loadUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      username = prefs.getString('username');
+    });
+  }
+
+  void _onSearchChanged() {
+    _applyFilters();
+  }
+
+  void _applyFilters() {
+    setState(() {
+      filteredItems = items.where((item) {
+        final matchesSearch = item['name'].toLowerCase().contains(_searchController.text.toLowerCase());
+        final matchesTime = timeFilter == null || (timeFilter! <= 60 ? item['time'] <= timeFilter! : item['time'] > 60);
+        final matchesMeat = !meatFilter || item['meat'] == true;
+        final matchesDairy = !dairyFilter || item['dairy'] == true;
+        final matchesGluten = !glutenFilter || item['gluten'] == true;
+        final matchesLowsugar = !lowsugarFilter || item['lowsugar'] == true;
+        return matchesSearch && matchesTime && matchesMeat && matchesDairy && matchesGluten && matchesLowsugar;
+      }).toList();
+    });
+  }
+
+  void _toggleFilter(String filter) {
+    setState(() {
+      switch (filter) {
+        case 'meat':
+          meatFilter = !meatFilter;
+          break;
+        case 'dairy':
+          dairyFilter = !dairyFilter;
+          break;
+        case 'gluten':
+          glutenFilter = !glutenFilter;
+          break;
+        case 'lowsugar':
+          lowsugarFilter = !lowsugarFilter;
+          break;
+      }
+      _applyFilters();
+    });
+  }
+
+  void _filterItemsByTime(int maxTime) {
+    setState(() {
+      timeFilter = maxTime;
+      _applyFilters();
+    });
+  }
+
+  void _navigateBasedOnLoginStatus(Widget loggedInWidget, Widget loggedOutWidget) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => loggedInWidget,
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => loggedOutWidget,
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -43,11 +131,9 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     List<Widget> leftColumnItems = [];
-    List<Widget> rightColumnItems = [
-      SizedBox(height: 100,),
-    ];
+    List<Widget> rightColumnItems = [SizedBox(height: 100)];
 
-    for (var item in items) {
+    for (var item in filteredItems) {
       if (item['id'] % 2 == 0) {
         leftColumnItems.add(
           FoodIcon(
@@ -83,7 +169,7 @@ class _DashboardState extends State<Dashboard> {
 
     return Scaffold(
       bottomNavigationBar: Container(
-        height: 100, // Höhe des Containers entsprechend der Bildgröße
+        height: 100,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -116,10 +202,7 @@ class _DashboardState extends State<Dashboard> {
               ),
             ),
             IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Dashboard()),
-              ),
+              onPressed: () => _navigateBasedOnLoginStatus(Profile(), Register()),
               icon: Icon(
                 Icons.favorite,
                 size: 40,
@@ -129,7 +212,7 @@ class _DashboardState extends State<Dashboard> {
             IconButton(
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Dashboard()),
+                MaterialPageRoute(builder: (context) => Register()),
               ),
               icon: Icon(
                 Icons.explore,
@@ -138,7 +221,7 @@ class _DashboardState extends State<Dashboard> {
               ),
             ),
             IconButton(
-              onPressed: () {},
+              onPressed: () => _navigateBasedOnLoginStatus(Profile(), Register()),
               icon: Icon(
                 Icons.person,
                 size: 40,
@@ -171,7 +254,7 @@ class _DashboardState extends State<Dashboard> {
             Padding(
               padding: EdgeInsets.only(left: 25.0, right: 25),
               child: Text(
-                "HI <NAME> 😇",
+                username != null ? "HI $username 😇" : "HI 😇",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
@@ -196,7 +279,6 @@ class _DashboardState extends State<Dashboard> {
                   ),
                   prefixIcon: Icon(Icons.search),
                 ),
-                // onChanged: (query) => _filterItems(query),
               ),
             ), //Searchbar
             SizedBox(height: 50),
@@ -205,33 +287,56 @@ class _DashboardState extends State<Dashboard> {
               child: Row(
                 children: [
                   FilterButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Dashboard()),
-                    ),
+                    onPressed: () async {
+                      final result = await showDialog<int>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return SimpleDialog(
+                            title: Text('Select Time Filter'),
+                            children: [
+                              SimpleDialogOption(
+                                onPressed: () {
+                                  Navigator.pop(context, 15);
+                                },
+                                child: Text('<= 15 minutes'),
+                              ),
+                              SimpleDialogOption(
+                                onPressed: () {
+                                  Navigator.pop(context, 30);
+                                },
+                                child: Text('<= 30 minutes'),
+                              ),
+
+                            ],
+                          );
+                        },
+                      );
+                      if (result != null) {
+                        _filterItemsByTime(result);
+                      }
+                    },
                     imagePath: 'assets/images/clock.png',
                   ),
                   FilterButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Dashboard()),
-                      ),
-                      imagePath: 'assets/images/chicken-leg.png'),
+                    onPressed: () => _toggleFilter('meat'),
+                    imagePath: 'assets/images/chicken-leg.png',
+                    color: meatFilter ? Colors.blue : Colors.white,
+                  ),
                   FilterButton(
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Dashboard())),
-                      imagePath: 'assets/images/dairy-products.png'),
+                    onPressed: () => _toggleFilter('dairy'),
+                    imagePath: 'assets/images/dairy-products.png',
+                    color: dairyFilter ? Colors.blue : Colors.white,
+                  ),
                   FilterButton(
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Dashboard())),
-                      imagePath: 'assets/images/wheat.png'),
+                    onPressed: () => _toggleFilter('gluten'),
+                    imagePath: 'assets/images/wheat.png',
+                    color: glutenFilter ? Colors.blue : Colors.white,
+                  ),
                   FilterButton(
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Dashboard())),
-                      imagePath: 'assets/images/sugar-cube.png'),
+                    onPressed: () => _toggleFilter('lowsugar'),
+                    imagePath: 'assets/images/sugar-cube.png',
+                    color: lowsugarFilter ? Colors.blue : Colors.white,
+                  ),
                 ],
               ),
             ), //Filter

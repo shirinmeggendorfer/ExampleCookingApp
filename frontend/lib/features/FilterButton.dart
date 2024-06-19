@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class FilterButton extends StatefulWidget {
   final Function onPressed;
   final String imagePath;
+  final Color color;
 
   const FilterButton({
     Key? key,
     required this.onPressed,
     required this.imagePath,
+    this.color = Colors.white, // Default color is white
   }) : super(key: key);
 
   @override
@@ -25,7 +27,7 @@ class _FilterButtonState extends State<FilterButton> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
+                color: widget.color.withOpacity(0.9), // Use the color from widget property
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(

@@ -101,6 +101,31 @@ class _RecipeState extends State<Recipe> {
                       ),
                     ),
                     SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          '⏱️ ${item!['time']} min',
+                          style: TextStyle(fontSize: 25),
+                        ),
+                        Text(
+                          '${item!['meat'] ? "🍗" : "🌱"}',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        Text(
+                          '${item!['dairy'] ? "🧀" : ""}',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        Text(
+                          '${item!['gluten'] ? "🌾" : ""}',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        Text(
+                          '${item!['lowsugar'] ? "🤍" : ""}',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                      ],
+                    ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
@@ -117,27 +142,10 @@ class _RecipeState extends State<Recipe> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    Text(
-                      'Time: ${item!['time']} minutes',
-                      style: TextStyle(fontSize: 18),
-                    ),
+
                     SizedBox(height: 10),
-                    Text(
-                      'Meat: ${item!['meat'] ? "Yes" : "No"}',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    Text(
-                      'Dairy: ${item!['dairy'] ? "Yes" : "No"}',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    Text(
-                      'Gluten: ${item!['gluten'] ? "Yes" : "No"}',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    Text(
-                      'Low Sugar: ${item!['lowsugar'] ? "Yes" : "No"}',
-                      style: TextStyle(fontSize: 18),
-                    ),
+
+
                   ],
                 ),
               ],
