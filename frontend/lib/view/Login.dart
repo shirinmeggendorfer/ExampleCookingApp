@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/view/dashboard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,30 +66,88 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Dashboard(),
+            ),
+          );
+        },
+        child: Icon(Icons.arrow_back_ios_new_outlined),
       ),
-      body: Padding(
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      body:
+      Stack(
+        children: [
+        Positioned(
+        top: -200,
+        right: -175,
+        child: Container(
+          height: 800,
+          width: 800  , // Set a width to make it visible
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(500),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(127, 109, 246, 100),
+                Color.fromRGBO(70, 182, 198, 100),
+              ],
+            ),
+          ),
+        ),
+      ),
+      Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          children: <Widget>[
+          children: [
+            SizedBox(height:70),
+            Text("LOGIN",
+              style: TextStyle(
+                  fontSize: 30,
+                  letterSpacing: 3,
+                  color: Colors.white
+              ),),
+            SizedBox(height: 50,),
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
+              decoration:InputDecoration(
+                hintText: 'USERNAME',
+                labelStyle: TextStyle(color: Colors.black, letterSpacing: 3),
+                fillColor: Colors.white,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
             ),
+            SizedBox(height: 10,),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(
+                hintText: 'PASSWORD',
+                labelStyle: TextStyle(color: Colors.black, letterSpacing: 3),
+                fillColor: Colors.white,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
               obscureText: true,
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _login,
-              child: Text('Login'),
+              child: Text("LET'S GO"),
             ),
           ],
         ),
       ),
-    );
+    ]),);
   }
 }
