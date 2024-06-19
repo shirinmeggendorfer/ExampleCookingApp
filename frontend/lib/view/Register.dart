@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/ombreBackground.dart';
+import 'package:frontend/features/OmbreBackground.dart';
 import 'package:frontend/view/Login.dart';
-import 'package:frontend/view/dashboard.dart';
+import 'package:frontend/view/Dashboard.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 

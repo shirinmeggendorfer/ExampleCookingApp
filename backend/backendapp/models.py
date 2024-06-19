@@ -1,7 +1,6 @@
-from django.db import models
 
-# Create your models here.
 from django.db import models
+from django.contrib.auth.models import User
 
 class Item(models.Model):
     id = models.AutoField(primary_key=True)
@@ -18,3 +17,11 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    item = models.ForeignKey('Item', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'item')

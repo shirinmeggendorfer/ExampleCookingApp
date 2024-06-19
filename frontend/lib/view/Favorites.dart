@@ -3,19 +3,20 @@ import 'package:frontend/features/FilterButton.dart';
 import 'package:frontend/features/FoodIcon.dart';
 import 'package:frontend/features/ombreBackground.dart';
 import 'package:frontend/api_service.dart';
+import 'package:frontend/view/Dashboard.dart';
 import 'package:frontend/view/recipe.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/view/register.dart';
 import 'package:frontend/view/profile.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
+class Favorite extends StatefulWidget {
+  const Favorite({super.key});
 
   @override
-  State<Dashboard> createState() => _DashboardState();
+  State<Favorite> createState() => _FavoriteState();
 }
 
-class _DashboardState extends State<Dashboard> {
+class _FavoriteState extends State<Favorite> {
   final TextEditingController _searchController = TextEditingController();
   final ApiService apiService = ApiService();
   List<dynamic> items = [];
@@ -31,20 +32,21 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     super.initState();
-    _fetchItems();
+    _fetchFavoriteItems();
     _loadUsername();
     _searchController.addListener(_onSearchChanged);
   }
 
-  Future<void> _fetchItems() async {
+  Future<void> _fetchFavoriteItems() async {
     try {
-      final fetchedItems = await apiService.fetchItems();
+      final fetchedItems = await apiService.fetchFavoriteItems();
       setState(() {
-        items = fetchedItems.take(20).toList();
+        items = fetchedItems;
         filteredItems = items;
       });
+      print('Fetched items: $fetchedItems');
     } catch (e) {
-      print('Failed to load items: $e');
+      print('Failed to load favorite items: $e');
     }
   }
 
@@ -56,19 +58,35 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _onSearchChanged() {
-    _applyFilters();
+    setState(() {
+      filteredItems = items
+          .where((item) => (item['name'] ?? '')
+              .toLowerCase()
+              .contains(_searchController.text.toLowerCase()))
+          .toList();
+    });
   }
 
   void _applyFilters() {
     setState(() {
       filteredItems = items.where((item) {
-        final matchesSearch = item['name'].toLowerCase().contains(_searchController.text.toLowerCase());
-        final matchesTime = timeFilter == null || (timeFilter! <= 60 ? item['time'] <= timeFilter! : item['time'] > 60);
+        final matchesSearch = item['name']
+            .toLowerCase()
+            .contains(_searchController.text.toLowerCase());
+        final matchesTime = timeFilter == null ||
+            (timeFilter! <= 60
+                ? item['time'] <= timeFilter!
+                : item['time'] > 60);
         final matchesMeat = !meatFilter || item['meat'] == true;
         final matchesDairy = !dairyFilter || item['dairy'] == true;
         final matchesGluten = !glutenFilter || item['gluten'] == true;
         final matchesLowsugar = !lowsugarFilter || item['lowsugar'] == true;
-        return matchesSearch && matchesTime && matchesMeat && matchesDairy && matchesGluten && matchesLowsugar;
+        return matchesSearch &&
+            matchesTime &&
+            matchesMeat &&
+            matchesDairy &&
+            matchesGluten &&
+            matchesLowsugar;
       }).toList();
     });
   }
@@ -100,7 +118,8 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
-  void _navigateBasedOnLoginStatus(Widget loggedInWidget, Widget loggedOutWidget) async {
+  void _navigateBasedOnLoginStatus(
+      Widget loggedInWidget, Widget loggedOutWidget) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
@@ -134,10 +153,11 @@ class _DashboardState extends State<Dashboard> {
     List<Widget> rightColumnItems = [SizedBox(height: 100)];
 
     for (var item in filteredItems) {
+      final imagePath = item['image'] ?? ''; // Check if image path is valid
       if (item['id'] % 2 == 0) {
         leftColumnItems.add(
           FoodIcon(
-            title: item['name'],
+            title: item['name'] ?? 'Unknown',
             onPressed: () {
               Navigator.push(
                 context,
@@ -146,13 +166,15 @@ class _DashboardState extends State<Dashboard> {
                 ),
               );
             },
-            imagePath: item['image'],
+            imagePath: imagePath.isNotEmpty
+                ? imagePath
+                : 'assets/images/default_image.png',
           ),
         );
       } else {
         rightColumnItems.add(
           FoodIcon(
-            title: item['name'],
+            title: item['name'] ?? 'Unknown',
             onPressed: () {
               Navigator.push(
                 context,
@@ -161,76 +183,27 @@ class _DashboardState extends State<Dashboard> {
                 ),
               );
             },
-            imagePath: item['image'],
+            imagePath: imagePath.isNotEmpty
+                ? imagePath
+                : 'assets/images/default_image.png',
           ),
         );
       }
     }
 
     return Scaffold(
-      bottomNavigationBar: Container(
-        height: 100,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(89, 165, 216, 100).withOpacity(0.4),
-              Color.fromRGBO(194, 248, 203, 100).withOpacity(0.4),
-            ],
-          ),
-          color: Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              spreadRadius: 5,
-              blurRadius: 10,
-              offset: Offset(0, 3),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Dashboard(),
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.home,
-                size: 40,
-                color: Colors.black,
-              ),
-            ),
-            IconButton(
-              onPressed: () => _navigateBasedOnLoginStatus(Profile(), Register()),
-              icon: Icon(
-                Icons.favorite,
-                size: 40,
-                color: Colors.black,
-              ),
-            ),
-            IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Register()),
-              ),
-              icon: Icon(
-                Icons.explore,
-                size: 40,
-                color: Colors.black,
-              ),
-            ),
-            IconButton(
-              onPressed: () => _navigateBasedOnLoginStatus(Profile(), Register()),
-              icon: Icon(
-                Icons.person,
-                size: 40,
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
+        child: Icon(Icons.arrow_back_ios_new_outlined),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: OmbreBackground(
         childWidget: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +222,7 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 SizedBox(width: 10),
               ],
-            ), // Logo
+            ),
             SizedBox(height: 50),
             Padding(
               padding: EdgeInsets.only(left: 25.0, right: 25),
@@ -262,7 +235,7 @@ class _DashboardState extends State<Dashboard> {
                   letterSpacing: 3,
                 ),
               ),
-            ), //Greeting Text
+            ),
             SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.only(left: 25.0, right: 25),
@@ -280,7 +253,7 @@ class _DashboardState extends State<Dashboard> {
                   prefixIcon: Icon(Icons.search),
                 ),
               ),
-            ), //Searchbar
+            ),
             SizedBox(height: 50),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -306,7 +279,6 @@ class _DashboardState extends State<Dashboard> {
                                 },
                                 child: Text('<= 30 minutes'),
                               ),
-
                             ],
                           );
                         },
@@ -339,7 +311,7 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ],
               ),
-            ), //Filter
+            ), // Filter
             SizedBox(height: 20),
             Expanded(
               child: SingleChildScrollView(

@@ -1,5 +1,9 @@
 Run the Project
 Backend:
+Migration synch:
+python3 manage.py makemigrations
+python3 manage.py migrate
+
 python3 manage.py runserver
 
 Frontend:

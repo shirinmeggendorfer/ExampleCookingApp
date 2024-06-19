@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/view/dashboard.dart';
+import 'package:frontend/view/Dashboard.dart';
 import 'package:frontend/view/login.dart';
-import 'package:frontend/view/register.dart';
+import 'package:frontend/view/Register.dart';
 import 'package:frontend/view/profile.dart';
 
 void main() {
