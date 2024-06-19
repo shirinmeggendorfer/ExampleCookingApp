@@ -103,6 +103,7 @@ class _LoginState extends State<Login> {
       Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height:70),
             Text("LOGIN",
@@ -143,6 +144,10 @@ class _LoginState extends State<Login> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _login,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),),
               child: Text("LET'S GO"),
             ),
           ],

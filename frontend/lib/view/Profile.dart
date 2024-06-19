@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/ombreBackground.dart';
+import 'package:frontend/view/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -59,7 +59,14 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> _updatePassword() async {
-    if (_passwordController.text.isNotEmpty && _passwordController.text == _confirmPasswordController.text) {
+    if (_passwordController.text.isNotEmpty) {
+      // Show confirmation dialog
+      _showConfirmationDialog();
+    }
+  }
+
+  Future<void> _confirmPasswordUpdate(String confirmedPassword) async {
+    if (_passwordController.text == confirmedPassword) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
       final response = await http.put(
@@ -110,105 +117,212 @@ class _ProfileState extends State<Profile> {
     );
   }
 
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Password'),
+          content: TextField(
+            controller: _confirmPasswordController,
+            decoration: InputDecoration(
+              hintText: 'Confirm Password',
+              labelStyle: TextStyle(color: Colors.black),
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(
+                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16), // Add padding
+            ),
+            obscureText: true,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('CANCEL'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('CONFIRM'),
+              onPressed: () {
+                _confirmPasswordUpdate(_confirmPasswordController.text);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: OmbreBackground(
-        childWidget: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Image(
-                      image: AssetImage('assets/images/cooking.png'),
-                      height: 60,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                ],
-              ), // Logo
-              SizedBox(height: 50),
-              Text(
-                'Profile',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                  color: Colors.white,
-                  letterSpacing: 3,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Dashboard(),
+            ),
+          );
+        },
+        child: Icon(Icons.arrow_back_ios_new_outlined),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -200,
+            right: -175,
+            child: Container(
+              height: 800,
+              width: 800, // Set a width to make it visible
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(500),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.fromRGBO(127, 109, 246, 100),
+                    Color.fromRGBO(70, 182, 198, 100),
+                  ],
                 ),
               ),
-              SizedBox(height: 30),
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  labelStyle: TextStyle(color: Colors.black),
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _updateUsername,
-                child: Text('Update Username'),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  labelStyle: TextStyle(color: Colors.black),
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                obscureText: true,
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _confirmPasswordController,
-                decoration: InputDecoration(
-                  labelText: 'Confirm Password',
-                  labelStyle: TextStyle(color: Colors.black),
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                obscureText: true,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _updatePassword,
-                child: Text('Update Password'),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _logout,
-                child: Text('Logout'),
-                style: ElevatedButton.styleFrom(
-                   // Background color
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'PROFILE',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 30,
+                          color: Colors.white,
+                          letterSpacing: 3,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Image(
+                        image: AssetImage('assets/images/cooking.png'),
+                        height: 60,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                  ],
+                ), // Logo
+                SizedBox(height: 50),
+                Text(
+                  'CHANGE YOUR CREDENTIALS HERE',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.white,
+                    letterSpacing: 3,
+                  ),
+                ),
+                SizedBox(height: 20,),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          hintText: 'Username',
+                          labelStyle: TextStyle(color: Colors.black),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16), // Add padding
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      flex: 1,
+                      child: ElevatedButton(
+                        onPressed: _updateUsername,
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          minimumSize: Size(0, 48), // Set the height here
+                        ),
+                        child: Text('UPDATE'),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          hintText: 'NEW PASSWORD',
+                          labelStyle: TextStyle(color: Colors.black),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16), // Add padding
+                        ),
+                        obscureText: true,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      flex: 1,
+                      child: ElevatedButton(
+                        onPressed: _updatePassword,
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          minimumSize: Size(0, 48), // Set the height here
+                        ),
+                        child: Text('UPDATE'),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _logout,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    minimumSize: Size(double.infinity, 48), // Set the height and width here
+                  ),
+                  child: Text('LOGOUT'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

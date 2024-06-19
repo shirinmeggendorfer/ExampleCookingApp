@@ -195,6 +195,10 @@ SizedBox(height: 50,),
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: ElevatedButton(
                   onPressed: _register,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),),
                   child: Text("LET'S GO"),
                 ),
               ),
