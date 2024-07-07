@@ -70,9 +70,6 @@ Folgen Sie diesen Schritten, um das Projekt lokal zu installieren.
 3. Daten hinzufügen / bearbeiten / löschen
 
 ## Screenshots
-
-Fügen Sie hier einige Screenshots Ihres Projekts ein, um einen visuellen Eindruck zu vermitteln.
-
 ![Screenshot 1](screenshots/dashboard.png "Dashboard")
 ![Screenshot 2](screenshots/filter.png "Filterfunktion")
 ![Screenshot 3](screenshots/recipe.png "Rezeptansicht")
